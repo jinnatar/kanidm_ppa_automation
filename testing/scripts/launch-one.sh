@@ -21,7 +21,7 @@ case "$arch" in
 		;;
 	aarch64)
 		MACHINE=virt,gic-version=3
-		CPU=max  # Not ideal, but works around systemd-253+ being annoying about CLONE_NEWNS
+		CPU=max
   		ACCEL="-accel tcg,thread=multi"
 		
 		# The QEMU aarch64 virt machine is super picky and needs an exactly 64MiB EFI image and a varstore.
@@ -41,14 +41,12 @@ esac
 SSH_PORT="${SSH_PORT:-222}"
 TELNET_PORT="${TELNET_PORT:-4321}"
 
->&2 echo "Resizing $img so our dpkg operations will fit"
-qemu-img resize "$img" 5G
 
 >&2 echo "Booting $arch $MACHINE with $EFI from $img"
 
 "qemu-system-$arch"  \
   -machine type="${MACHINE}" -m 1024 \
-  -cpu ${CPU} \
+  -cpu ${CPU} -smp 4 \
   ${ACCEL} \
   -snapshot \
   -drive if=pflash,format=raw,file=${EFI},readonly=on \

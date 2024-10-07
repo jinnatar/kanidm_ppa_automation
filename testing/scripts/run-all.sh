@@ -1,6 +1,6 @@
 #!/bin/bash
-scripts/get-images.sh 
 scripts/install-deps.sh
+scripts/get-images.sh
 
 export SSH_PORT=2222
 

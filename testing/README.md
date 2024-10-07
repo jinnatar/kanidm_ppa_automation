@@ -28,6 +28,7 @@ Testing other architectures is even more Fun than packaging for them. The script
 
 ### Known issues
 - aarch64 is super slow. If you're a QEMU wizard, try optimizing `scripts/launch-one.sh`
-- Newer versions of systemd on the target image are susceptible to odd crashes. The `-cpu max` param works around this, but then is a very generic unreal aarch64 target.
-- We arbitrarily expand every image to 5GiB. This works now but may fail later. Some default image sizes only leave ~200MiB of free space which isn't enough for our deb sizes to go through dpkg copy logic.
+- We throw 4 cores for the cpu so that mounting the rootfs is fast enough to not time out on ubuntu. Yes, that's a crazy problem to have.
+- Newer versions of systemd on the target image are susceptible to odd crashes. Anything tried to make them better instead made everything else so much worse.
+- We expand every disk image a bit because some default image sizes only leave ~200MiB of free space which isn't enough for our deb sizes to go through dpkg copy logic. This makes GPT unhappy, but that seems to be ok.
 - Too many things require sudo. You could probably somehow run qemu without it but meh.

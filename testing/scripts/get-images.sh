@@ -18,7 +18,10 @@ x86_64=(
 mkdir -p images && cd images
 
 for image in ${aarch64[@]} ${x86_64[@]}; do
-	if [[ ! -f $(basename $image) ]]; then
+	file="$(basename $image)"
+	if [[ ! -f "$file" ]]; then
 		wget "$image"
+		>&2 echo "Resizing $file so our dpkg operations will fit"
+		qemu-img resize "$file" +500M
 	fi
 done
