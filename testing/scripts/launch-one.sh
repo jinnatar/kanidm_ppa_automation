@@ -1,28 +1,30 @@
 #!/bin/bash
 
-set -eu
-
 arch="${1?}"
 img="${2?}"
-debglob="${2?}"
+shift 2
+debglob="$@"
 
-SSH_PORT="${SSH_PORT:-222}"
-
->&2 echo "Generating seed.img"
-cloud-localds seed.img user-data.yaml
+>&2 echo "Generating ssh keys & seed.img"
+cloud-localds seed.img <(scripts/gen-user-data.sh)
 
 >&2 echo "Generating EFI artifacts"
 
 case "$arch" in
-	x86_64)
-		MACHINE=q35,accel=kvm
+	x86_64)  # We assume this is native. Someone who owns a high powered arm64 can go ahead and fix that.
+		MACHINE=q35
+		CPU=native
 		EFI=/usr/share/OVMF/OVMF_CODE.fd
 		VARSTORE=""
 		DRIVE="-drive if=virtio,format=qcow2,file=${img}"
+  		ACCEL="-accel kvm"
 		;;
 	aarch64)
 		MACHINE=virt,gic-version=3
+		CPU=max  # Not ideal, but works around systemd-253+ being annoying about CLONE_NEWNS
+  		ACCEL="-accel tcg,thread=multi"
 		
+		# The QEMU aarch64 virt machine is super picky and needs an exactly 64MiB EFI image and a varstore.
 		truncate -s 64m "${arch}_varstore.img"
 		truncate -s 64m "${arch}_efi.img"
 		dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of="${arch}_efi.img" conv=notrunc
@@ -36,16 +38,42 @@ case "$arch" in
 		;;
 esac
 
+SSH_PORT="${SSH_PORT:-222}"
+TELNET_PORT="${TELNET_PORT:-4321}"
+
+>&2 echo "Resizing $img so our dpkg operations will fit"
+qemu-img resize "$img" 5G
+
 >&2 echo "Booting $arch $MACHINE with $EFI from $img"
 
 "qemu-system-$arch"  \
   -machine type="${MACHINE}" -m 1024 \
-  -cpu max \
-  -nographic \
+  -cpu ${CPU} \
+  ${ACCEL} \
   -snapshot \
   -drive if=pflash,format=raw,file=${EFI},readonly=on \
   ${VARSTORE} \
   ${DRIVE} \
   -drive if=virtio,format=raw,file=seed.img \
   -netdev id=net00,type=user,hostfwd=tcp::"${SSH_PORT}"-:22 \
-  -device virtio-net-pci,netdev=net00
+  -device virtio-net-pci,netdev=net00 \
+  -monitor unix:qemu-monitor.socket,server,nowait \
+  -serial telnet:localhost:${TELNET_PORT},server,nowait \
+  -display none -daemonize -pidfile qemu.pid || exit 1
+
+SSH_OPTS="-i ssh_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+while true; do
+	echo "Waiting for VM.. try 'nc localhost 4321' to see what's going on."
+	output=$(ssh $SSH_OPTS -p "$SSH_PORT" -o ConnectTimeout=1 root@localhost whoami)
+	[[ "$output" == "root" ]] && break
+	sleep 10s
+done
+
+>&2 echo "Up! Transferring assets."
+scp $SSH_OPTS -P "$SSH_PORT" -r $debglob test_payload.sh unixd.toml kanidm.toml root@localhost:
+>&2 echo "Launching test payload."
+ssh $SSH_OPTS -p "$SSH_PORT" root@localhost ./test_payload.sh
+
+>&2 echo "Done, killing qemu"
+kill $(cat qemu.pid)
+rm qemu.pid
