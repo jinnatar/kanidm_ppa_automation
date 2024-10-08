@@ -17,7 +17,13 @@ x86_64=(
 
 mkdir -p images && cd images
 
-for image in ${aarch64[@]} ${x86_64[@]}; do
+>&2 echo "Downloading native images"
+native_arch="$(uname -m)"
+# If you really want to do cross-arch, uncomment this.
+#native_arch="aarch64"
+images=$native_arch[@]
+
+for image in "${!images}"; do
 	file="$(basename $image)"
 	if [[ ! -f "$file" ]]; then
 		wget "$image"
