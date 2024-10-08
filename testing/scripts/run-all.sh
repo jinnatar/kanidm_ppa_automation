@@ -17,17 +17,16 @@ function run(){
 	sleep 2s  # Wait for qemu to release ports
 }
 
-### Sequencing of permutations. The defaults only test current stable
+### Sequencing of permutations. The defaults only test current stable on current native arch
+# You could just enable aarch64 manually below, but better off running on a pi5 natively!
 
-target=x86_64
-arch=amd64
+target="$(uname -m)"
+arch="$(dpkg --print-architecture)"
+
+#target=aarch64
+#arch=arm64
+
 run debian-12 debs/stable/stable-debian-12-${target}-unknown-linux-gnu/kanidm*
 run jammy debs/stable/stable-ubuntu-22.04-${target}-unknown-linux-gnu/kanidm*
 run noble debs/stable/stable-ubuntu-24.04-${target}-unknown-linux-gnu/kanidm*
 
-
-target=aarch64
-arch=arm64
-run debian-12 debs/stable/stable-debian-12-${target}-unknown-linux-gnu/kanidm*
-run jammy debs/stable/stable-ubuntu-22.04-${target}-unknown-linux-gnu/kanidm*
-run noble debs/stable/stable-ubuntu-24.04-${target}-unknown-linux-gnu/kanidm*

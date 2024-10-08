@@ -10,20 +10,33 @@ cloud-localds seed.img <(scripts/gen-user-data.sh)
 
 >&2 echo "Generating EFI artifacts"
 
+native_arch="$(uname -m)"
+
 case "$arch" in
-	x86_64)  # We assume this is native. Someone who owns a high powered arm64 can go ahead and fix that.
+	x86_64)
+		if [[ "$arch" != "$native_arch" ]]; then
+			>&2 echo "This is a very bad idea, go modify the script if this is what you truly want."
+			exit 1
+		fi
 		MACHINE=q35
 		CPU=native
+  		ACCEL="-accel kvm"
 		EFI=/usr/share/OVMF/OVMF_CODE.fd
 		VARSTORE=""
 		DRIVE="-drive if=virtio,format=qcow2,file=${img}"
-  		ACCEL="-accel kvm"
 		;;
 	aarch64)
-		MACHINE=virt,gic-version=3
-		CPU=max
-  		ACCEL="-accel tcg,thread=multi"
-		
+		if [[ "$arch" == "$native_arch" ]]; then
+			MACHINE=virt
+			CPU=max
+			ACCEL="-accel kvm"
+		else
+			# Best we can do for cross arch emulation
+			MACHINE=virt,gic-version=3
+			CPU=max
+			ACCEL="-accel tcg,thread=multi"
+		fi
+
 		# The QEMU aarch64 virt machine is super picky and needs an exactly 64MiB EFI image and a varstore.
 		truncate -s 64m "${arch}_varstore.img"
 		truncate -s 64m "${arch}_efi.img"
