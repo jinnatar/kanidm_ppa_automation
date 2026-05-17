@@ -101,7 +101,7 @@ run = '''
 function prog(){ while true; do echo -n .; sleep 1; done | pv -s "$1" -S -F "%t %p" > /dev/null }
 
 while [[ $? -eq 0 ]]; do
-  mise run test_now && ( kill $(pgrep -f "./test_payload.sh") ; prog 120 ) || prog 60
+  mise run --skip-tools test_now && ( kill $(pgrep -f "./test_payload.sh") ; prog 120 ) || prog 60
 done
 '''
 
