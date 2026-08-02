@@ -246,7 +246,12 @@ fi
 log "$GREEN" "Configuring kanidm-unixd..."
 if [[ "$LOCAL_IDM" == "true" ]]; then
   log "$GREEN" "Using local kanidmd, disabling verify_ca"
-  sed -e '/^verify_ca/s/true/false/' -i /etc/kanidm/config
+  if grep verify_ca /etc/kanidm/config >/dev/null; then
+    sed -e '/^verify_ca/s/true/false/' -i /etc/kanidm/config
+  else
+    # 1.11+ no longer include the line to modify
+    echo 'verify_ca = false' >> /etc/kanidm/config
+  fi
 fi
 # Set Kanidm level uri
 sed "s_# *uri.*_uri = \"${IDM_URI}\"_" -i /etc/kanidm/config
