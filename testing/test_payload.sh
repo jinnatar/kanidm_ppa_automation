@@ -188,7 +188,8 @@ if [[ "$IDM_URI" == "local" ]]; then
 
   log "$GREEN" "Starting kanidmd..."
   systemctl start kanidmd.service || debug
-  sleep 5s
+  log "$GREEN" "Waiting a bit for kanidmd to be ready..."
+  sleep 10s
   
   log "$GREEN" "Seeding kanidmd for posix login..."
   # The CLI behavior changes significantly with 1.9.0
