@@ -188,7 +188,8 @@ if [[ "$IDM_URI" == "local" ]]; then
 
   log "$GREEN" "Starting kanidmd..."
   systemctl start kanidmd.service || debug
-  sleep 5s
+  log "$GREEN" "Waiting a bit for kanidmd to be ready..."
+  sleep 10s
   
   log "$GREEN" "Seeding kanidmd for posix login..."
   # The CLI behavior changes significantly with 1.9.0
@@ -246,7 +247,12 @@ fi
 log "$GREEN" "Configuring kanidm-unixd..."
 if [[ "$LOCAL_IDM" == "true" ]]; then
   log "$GREEN" "Using local kanidmd, disabling verify_ca"
-  sed -e '/^verify_ca/s/true/false/' -i /etc/kanidm/config
+  if grep verify_ca /etc/kanidm/config >/dev/null; then
+    sed -e '/^verify_ca/s/true/false/' -i /etc/kanidm/config
+  else
+    # 1.11+ no longer include the line to modify
+    echo 'verify_ca = false' >> /etc/kanidm/config
+  fi
 fi
 # Set Kanidm level uri
 sed "s_# *uri.*_uri = \"${IDM_URI}\"_" -i /etc/kanidm/config
