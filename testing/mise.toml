@@ -72,6 +72,10 @@ env = { CATEGORY = "stable", IDM_URI = "local" }
 extends = "testcase"
 env = { CATEGORY = "stable", KANIDM_VERSION = "{{env.OLDSTABLE_VERSION}}", KANIDM_UPGRADE = "true" }
 
+[tasks."testcase:2d:oldstable-upgrade:dirtyext"]
+extends = "testcase"
+env = { CATEGORY = "stable", KANIDM_VERSION = "{{env.OLDSTABLE_VERSION}}", KANIDM_UPGRADE = "dirty" }
+
 [tasks."testcase:2s:oldstable-upgrade:self"]
 extends = "testcase"
 env = { CATEGORY = "stable", IDM_URI = "local", KANIDM_VERSION = "{{env.OLDSTABLE_VERSION}}", KANIDM_UPGRADE = "true" }

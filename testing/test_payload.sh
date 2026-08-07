@@ -290,7 +290,14 @@ basic_test
 ## If given a newer version to upgrade to for testing oldstable -> stable migrations.
 if [[ "$KANIDM_UPGRADE" != "false" ]]; then
   log "$GREEN" "Performing upgrade to latest Kanidm packages"
-  apt-get install -y --only-upgrade '*kanidm*'
+  if [[ "$KANIDM_UPGRADE" == "dirty" ]]; then
+    log "$YELLOW" "Doing a dirty upgrade without specifying libnss & libpam"
+    apt-get install -y kanidm-unixd kanidm
+  else
+    apt-get install -y --only-upgrade '*kanidm*'
+  fi
+
+  # Retry basic_test after the upgrade
   basic_test
 fi
 
