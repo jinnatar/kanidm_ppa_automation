@@ -20,7 +20,7 @@ run = "scripts/run-all.sh"
 SUCCESS_WAIT = "false"
 
 [tasks.test_all]
-depends = ["testcase:*"]
+depends = ["testcase:**"]
 description = "Run the entire target list, pausing to allow testing every permutation"
 
 [tasks.test_shell]
