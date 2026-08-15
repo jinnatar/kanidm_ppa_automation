@@ -20,7 +20,7 @@ run = "scripts/run-all.sh"
 SUCCESS_WAIT = "false"
 
 [tasks.test_all]
-depends = ["testcase:*"]
+depends = ["testcase:**"]
 description = "Run the entire target list, pausing to allow testing every permutation"
 
 [tasks.test_shell]
@@ -71,6 +71,10 @@ env = { CATEGORY = "stable", IDM_URI = "local" }
 [tasks."testcase:2e:oldstable-upgrade:ext"]
 extends = "testcase"
 env = { CATEGORY = "stable", KANIDM_VERSION = "{{env.OLDSTABLE_VERSION}}", KANIDM_UPGRADE = "true" }
+
+[tasks."testcase:2d:oldstable-upgrade:dirtyext"]
+extends = "testcase"
+env = { CATEGORY = "stable", KANIDM_VERSION = "{{env.OLDSTABLE_VERSION}}", KANIDM_UPGRADE = "dirty" }
 
 [tasks."testcase:2s:oldstable-upgrade:self"]
 extends = "testcase"
